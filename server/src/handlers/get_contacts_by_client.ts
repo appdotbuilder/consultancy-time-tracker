@@ -1,4 +1,7 @@
+import { db } from '../db';
+import { contactsTable } from '../db/schema';
 import { type Contact } from '../schema';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 const getContactsByClientInputSchema = z.object({
@@ -6,7 +9,15 @@ const getContactsByClientInputSchema = z.object({
 });
 
 export const getContactsByClient = async (input: z.infer<typeof getContactsByClientInputSchema>): Promise<Contact[]> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all contacts associated with a specific client.
-    return [];
+    try {
+        const results = await db.select()
+            .from(contactsTable)
+            .where(eq(contactsTable.client_id, input.client_id))
+            .execute();
+
+        return results;
+    } catch (error) {
+        console.error('Failed to fetch contacts by client:', error);
+        throw error;
+    }
 };

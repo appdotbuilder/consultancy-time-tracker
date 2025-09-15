@@ -1,16 +1,30 @@
+import { db } from '../db';
+import { positionsTable } from '../db/schema';
 import { type CreatePositionInput, type Position } from '../schema';
 
 export const createPosition = async (input: CreatePositionInput): Promise<Position> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new position and persisting it in the database.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+  try {
+    // Insert position record
+    const result = await db.insert(positionsTable)
+      .values({
         project_id: input.project_id,
         name: input.name,
         description: input.description,
-        budget: input.budget,
-        hourly_rate: input.hourly_rate,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Position);
+        budget: input.budget !== null ? input.budget.toString() : null, // Convert number to string for numeric column
+        hourly_rate: input.hourly_rate !== null ? input.hourly_rate.toString() : null // Convert number to string for numeric column
+      })
+      .returning()
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    const position = result[0];
+    return {
+      ...position,
+      budget: position.budget ? parseFloat(position.budget) : null, // Convert string back to number
+      hourly_rate: position.hourly_rate ? parseFloat(position.hourly_rate) : null // Convert string back to number
+    };
+  } catch (error) {
+    console.error('Position creation failed:', error);
+    throw error;
+  }
 };
